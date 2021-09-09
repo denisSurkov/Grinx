@@ -19,5 +19,7 @@
 - https://docs.python.org/3.8/library/argparse.html
 - https://docs.pytest.org/en/6.2.x/goodpractices.html
 - https://docs.python.org/3.8/library/configparser.html
+- https://datatracker.ietf.org/doc/html/rfc2616
+- https://docs.python.org/3.8/library/logging.html
 
 Сурков Денис Дмитриевич, ФИИТ 2 курс 2021

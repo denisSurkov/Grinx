@@ -1,23 +1,25 @@
 import asyncio
+import logging
 from asyncio import StreamReader, StreamWriter
+from logging import getLogger
 
 from configuration.cli_builder import CommandLineInterfaceBuilder
+from request_processor import RequestProcessor
+
+logging.basicConfig(level=logging.DEBUG)
+
+logger = getLogger(__name__)
 
 
 async def request_handler(reader: StreamReader, writer: StreamWriter):
-    data = await reader.read(1024)
-    writer.write(b"HTTP/1.1 200 OK\r\n")
-    writer.write(b"Content-Length: 1\r\n")
-    writer.write(b"Content-Type: text/html\r\n")
-    writer.write(b"Accept-Ranges: bytes\r\n")
-    writer.write(b"\r\n")
-    writer.write(b"1")
-    await writer.drain()
+    logger.debug('got new request')
+    request_processor = RequestProcessor(reader, writer)
+    await request_processor()
 
 
 async def main(args):
     server = await asyncio.start_server(request_handler, args.host, args.port, )
-    print(server.sockets[0].getsockname())
+    logger.debug('strating server on %s', server.sockets[0].getsockname())
     async with server:
         await server.serve_forever()
 
