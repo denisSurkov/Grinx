@@ -18,8 +18,8 @@ async def request_handler(reader: StreamReader, writer: StreamWriter):
 
 
 async def main(args):
-    server = await asyncio.start_server(request_handler, args.host, args.port, )
-    logger.debug('strating server on %s', server.sockets[0].getsockname())
+    server = await asyncio.start_server(request_handler, args.host, args.port)
+    logger.debug('starting server on %s', server.sockets[0].getsockname())
     async with server:
         await server.serve_forever()
 

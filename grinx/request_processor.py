@@ -1,30 +1,15 @@
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
 
+from grinx.exceptions.base import BaseGrinxException
+from grinx.requests.base import BaseRequest
+from grinx.requests.request_parser import RequestParser
+from grinx.responses.base import BaseResponse
+
 logger = getLogger(__name__)
 
 
-class UnprocessableRequestException(BaseException):
-    ...
-
-
-class Request:
-    def __init__(self):
-        self.body = b""
-        self.method = ""
-        self.path = ""
-        self.protocol = ""
-        self.headers = {
-
-        }
-
-    def __str__(self):
-        return f"{self.method} {self.path} {self.protocol}"
-
-
 class RequestProcessor:
-    DEFAULT_READ_SIZE = 1024
-
     def __init__(self, reader: StreamReader, writer: StreamWriter):
         self.reader = reader
         self.writer = writer
@@ -32,45 +17,27 @@ class RequestProcessor:
         self._body = b""
         self._data_read = 0
         self._read_all_data = False
-        self._request_working_on = Request()
 
     async def __call__(self):
         await self.process()
 
     async def process(self):
-        await self.read()
+        try:
+            request: BaseRequest = await self.read()
+            response: BaseResponse = self.process_request(request)
+        except BaseGrinxException as e:
+            response: BaseResponse = e.to_response()
 
-        self.writer.write(b"HTTP/1.1 200 OK\r\n")
-        self.writer.write(b"Content-Length: 1\r\n")
-        self.writer.write(b"Content-Type: text/html\r\n")
-        self.writer.write(b"Accept-Ranges: bytes\r\n")
-        self.writer.write(b"\r\n")
-        self.writer.write(b"1")
+        response.flush_to_writer(self.writer.write)
+
         await self.writer.drain()
+        self.writer.close()
 
-    async def read(self):
-        data_read = 0
-        data_chunk = await self.reader.read(self.DEFAULT_READ_SIZE)
-        data_read += self.DEFAULT_READ_SIZE
-        self.analyze_data(data_chunk)
+    async def read(self) -> BaseRequest:
+        request_parser = RequestParser(self.reader)
+        return await request_parser()
 
-    def analyze_data(self, data_chunk: bytes):
-        if self._data_read <= self.DEFAULT_READ_SIZE:
-            header = self.analyze_header(data_chunk)
-
-    def analyze_header(self, data_chunk: bytes):
-        lines = data_chunk.split(b'\r\n')
-        first_part = lines[0]
-
-        splited_first_part = first_part.decode('UTF-8').split(' ')
-        if len(splited_first_part) != 3:
-            raise UnprocessableRequestException('Wrong header')
-
-        method = splited_first_part[0]
-        self._request_working_on.method = method
-
-        path = splited_first_part[1]
-        self._request_working_on.path = path
-
-        protocol = splited_first_part[2]
-        self._request_working_on.protocol = protocol
+    def process_request(self, request: BaseRequest) -> BaseResponse:
+        if request.request_uri == '/fail':
+            return BaseResponse(400, 'Bad request', content=b'fuck!')
+        return BaseResponse(200, 'OK', content=b'not fuck!')

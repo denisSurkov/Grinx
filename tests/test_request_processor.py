@@ -1,6 +1,6 @@
 import pytest
 
-from grinx.request_processor import RequestProcessor, UnprocessableRequestException
+from grinx.request_processor import RequestProcessor
 
 
 @pytest.fixture
@@ -22,5 +22,5 @@ def request_processor() -> RequestProcessor:
     b'GET s 1\r\n',
 ])
 def test_analyze_header_raises_exception_if_wrong_header(request_processor, input_chunk):
-    with pytest.raises(UnprocessableRequestException):
+    with pytest.raises(Exception):
         request_processor.analyze_header(input_chunk)

@@ -5,9 +5,11 @@ pytest
 pytest-mock
 pytest-randomly
 pytest-xdist
+pytest-cov
 freezegun
 
 isort >= 4.0
+coverage
 
 flake8
 flake8-absolute-import
