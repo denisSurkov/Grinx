@@ -1,3 +1,4 @@
+import os
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
 
@@ -5,6 +6,7 @@ from grinx.exceptions.base import BaseGrinxException
 from grinx.requests.base import BaseRequest
 from grinx.requests.request_parser import RequestParser
 from grinx.responses.base import BaseResponse
+from locations.file_location import RootFileLocation
 
 logger = getLogger(__name__)
 
@@ -24,8 +26,9 @@ class RequestProcessor:
     async def process(self):
         try:
             request: BaseRequest = await self.read()
-            response: BaseResponse = self.process_request(request)
-        except BaseGrinxException as e:
+            response: BaseResponse = await self.process_request(request)
+        # why except BaseGrinxException not working?
+        except BaseException as e:
             response: BaseResponse = e.to_response()
 
         response.flush_to_writer(self.writer.write)
@@ -37,7 +40,9 @@ class RequestProcessor:
         request_parser = RequestParser(self.reader)
         return await request_parser()
 
-    def process_request(self, request: BaseRequest) -> BaseResponse:
-        if request.request_uri == '/fail':
-            return BaseResponse(400, 'Bad request', content=b'fuck!')
+    async def process_request(self, request: BaseRequest) -> BaseResponse:
+        location = RootFileLocation(path_starts_with='/', root=os.path.join(os.getcwd(), '..', '..'))
+
+        if location.check_if_appropriate_for_request(request):
+            return await location.process_request(request)
         return BaseResponse(200, 'OK', content=b'not fuck!')

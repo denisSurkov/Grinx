@@ -17,7 +17,7 @@ async def request_handler(reader: StreamReader, writer: StreamWriter):
     await request_processor()
 
 
-async def main(args):
+async def entrypoint(args):
     server = await asyncio.start_server(request_handler, args.host, args.port)
     logger.debug('starting server on %s', server.sockets[0].getsockname())
     async with server:

@@ -1,58 +1,13 @@
-import re
+import asyncio
 from asyncio import StreamReader
+from typing import Dict
 
 from grinx.exceptions.bad_request import BadGrinxRequest
-from grinx.requests.base import BaseRequest
-
+from grinx.requests import BaseRequest, RequestPath
 
 ALLOWED_METHOD = frozenset((
         'OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'TRACE', 'CONNECT'
 ))
-
-# http://jmrware.com/articles/2009/uri_regexp/URI_regex.html
-RE_PYTHON_RFC3986_ABSOLUTE_URI = re.compile(r""" ^
-    # free-spacing mode regex for URI component:  absolute-URI
-    [A-Za-z][A-Za-z0-9+\-.]* :                                      # scheme ":"
-    (?: //                                                          # hier-part
-      (?: (?:[A-Za-z0-9\-._~!$&'()*+,;=:]|%[0-9A-Fa-f]{2})* @)?
-      (?:
-        \[
-        (?:
-          (?:
-            (?:                                                    (?:[0-9A-Fa-f]{1,4}:){6}
-            |                                                   :: (?:[0-9A-Fa-f]{1,4}:){5}
-            | (?:                            [0-9A-Fa-f]{1,4})? :: (?:[0-9A-Fa-f]{1,4}:){4}
-            | (?: (?:[0-9A-Fa-f]{1,4}:){0,1} [0-9A-Fa-f]{1,4})? :: (?:[0-9A-Fa-f]{1,4}:){3}
-            | (?: (?:[0-9A-Fa-f]{1,4}:){0,2} [0-9A-Fa-f]{1,4})? :: (?:[0-9A-Fa-f]{1,4}:){2}
-            | (?: (?:[0-9A-Fa-f]{1,4}:){0,3} [0-9A-Fa-f]{1,4})? ::    [0-9A-Fa-f]{1,4}:
-            | (?: (?:[0-9A-Fa-f]{1,4}:){0,4} [0-9A-Fa-f]{1,4})? ::
-            ) (?:
-                [0-9A-Fa-f]{1,4} : [0-9A-Fa-f]{1,4}
-              | (?: (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?) \.){3}
-                    (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)
-              )
-          |   (?: (?:[0-9A-Fa-f]{1,4}:){0,5} [0-9A-Fa-f]{1,4})? ::    [0-9A-Fa-f]{1,4}
-          |   (?: (?:[0-9A-Fa-f]{1,4}:){0,6} [0-9A-Fa-f]{1,4})? ::
-          )
-        | [Vv][0-9A-Fa-f]+\.[A-Za-z0-9\-._~!$&'()*+,;=:]+
-        )
-        \]
-      | (?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}
-           (?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)
-      | (?:[A-Za-z0-9\-._~!$&'()*+,;=]|%[0-9A-Fa-f]{2})*
-      )
-      (?: : [0-9]* )?
-      (?:/ (?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})* )*
-    | /
-      (?:    (?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})+
-        (?:/ (?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})* )*
-      )?
-    |        (?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})+
-        (?:/ (?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})* )*
-    |
-    )
-    (?:\? (?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]|%[0-9A-Fa-f]{2})* )?   # [ "?" query ]
-    $ """, re.VERBOSE)
 
 
 class RequestParser:
@@ -72,26 +27,51 @@ class RequestParser:
         # only three values in first line are allowed
         # so if there are more or less values in first line
         # than server cannot proceed this request
-        if len(splited_first_line) - 3 != 0:
+        if len(splited_first_line) != 3:
             raise BadGrinxRequest()
 
         # https://datatracker.ietf.org/doc/html/rfc2616#section-5.1
         method, request_uri, version = splited_first_line
 
         self.validate_method(method)
-        self.validate_request_uri(request_uri)
         self.validate_version(version)
 
-        incoming_request = BaseRequest.from_header(method, request_uri, version)
-        return incoming_request
+        request_path = self.validate_and_parse_request_uri(request_uri)
+
+        callback_to_read_all_headers = self.callback_to_read_all_headers
+        # TODO: ? ca
+        callback_to_read_body = self.callback_to_read_all_body
+
+        # TODO: what about headers?
+        return BaseRequest.from_header(method, request_path, version)
 
     def validate_method(self, method: str):
         if method not in ALLOWED_METHOD:
             raise BadGrinxRequest(f'{method} is not allowed')
 
-    def validate_request_uri(self, request_uri: str):
-        pass
+    def validate_and_parse_request_uri(self, request_uri: str) -> RequestPath:
+        return RequestPath.from_relative_path(request_uri)
 
     def validate_version(self, version: str):
         if version != 'HTTP/1.1':
             raise BadGrinxRequest(f'{version} is not supported')
+
+    def callback_to_read_all_headers(self):
+        loop = asyncio.get_running_loop()
+        feature = asyncio.run_coroutine_threadsafe(self.reader.readuntil(b'\r\n'), loop)
+        result = feature.result()
+        return self.parse_headers(result)
+
+    def parse_headers(self, raw_headers: bytes) -> Dict[str, str]:
+        decoded_and_splited = raw_headers.decode('utf8').split(' ')
+
+        jar = {}
+        for line in decoded_and_splited:
+            header, value = map(str.strip, line.split(':'))
+            jar[header] = value
+
+        return jar
+
+    def callback_to_read_all_body(self):
+        # TODO: ? how to read all body, I have to know headers?
+        pass
