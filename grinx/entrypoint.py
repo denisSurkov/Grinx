@@ -12,14 +12,14 @@ logger = getLogger(__name__)
 
 
 async def request_handler(reader: StreamReader, writer: StreamWriter):
-    logger.debug('got new request')
+    logger.debug('Got new request')
     request_processor = RequestProcessor(reader, writer)
     await request_processor()
 
 
 async def entrypoint(args):
     server = await asyncio.start_server(request_handler, args.host, args.port)
-    logger.debug('starting server on %s', server.sockets[0].getsockname())
+    logger.debug('Starting server on %s', server.sockets[0].getsockname())
     async with server:
         await server.serve_forever()
 
@@ -27,4 +27,4 @@ async def entrypoint(args):
 if __name__ == '__main__':
     parser = CommandLineInterfaceBuilder().build()
     args = parser.parse_args()
-    asyncio.run(main(args))
+    asyncio.run(entrypoint(args))

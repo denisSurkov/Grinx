@@ -1,4 +1,5 @@
 import abc
+import logging
 import os.path
 from abc import ABC
 
@@ -10,12 +11,15 @@ from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
 from grinx.responses.files_responses import ListDirectoryResponse, FileContentResponse
 
+logger = logging.getLogger()
+
 
 class BaseFileLocation(BaseLocation, ABC):
     def __init__(self, path_starts_with: str):
         self.path_starts_with = path_starts_with
 
     async def process_request(self, request_to_process: BaseRequest) -> BaseResponse:
+        logger.debug(f"processing location {request_to_process.path} with FILE location")
         path_to_file = self.get_full_path_to_file(request_to_process.path)
         response = await self.get_response_for_path_to_file(path_to_file, request_to_process.path)
         return response

@@ -28,6 +28,7 @@ class RequestProcessor:
             response: BaseResponse = await self.process_request(request)
         # why except BaseGrinxException not working?
         except BaseException as e:
+            logger.debug(f"got problem {e}")
             response: BaseResponse = e.to_response()
 
         response.flush_to_writer(self.writer.write)
@@ -40,7 +41,7 @@ class RequestProcessor:
         return await request_parser()
 
     async def process_request(self, request: BaseRequest) -> BaseResponse:
-        location = RootFileLocation(path_starts_with='/', root=os.path.join(os.getcwd(), '..', '..'))
+        location = RootFileLocation(path_starts_with='/', root=os.path.join(os.getcwd()))
 
         if location.check_if_appropriate_for_request(request):
             return await location.process_request(request)
