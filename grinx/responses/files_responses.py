@@ -18,9 +18,6 @@ class ListDirectoryResponse(BaseResponse):
 
     @staticmethod
     def generate_dots_for_list(files_path: List[str]) -> bytes:
-        # возможно, это бред писать так на питоне.
-        # я предположил, что так будет быстрее
-        # но это сильно влияет на читаемость. Этакий StringBuilder
         parts = ['<ul>']
 
         for path in files_path:
@@ -32,7 +29,6 @@ class ListDirectoryResponse(BaseResponse):
             parts.append('</a></li>')
 
         parts.append('</ul>')
-
         return bytes(''.join(parts), 'utf8')
 
 

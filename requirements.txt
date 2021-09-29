@@ -4,17 +4,37 @@
 #
 #    pip-compile requirements.in
 #
-click==8.0.1
-    # via pip-tools
-pep517==0.11.0
-    # via pip-tools
-pip-tools==6.2.0
+aiodns==3.0.0
+    # via aiohttp
+aiofiles==0.7.0
     # via -r requirements.in
-tomli==1.2.1
-    # via pep517
-wheel==0.37.0
-    # via pip-tools
-
-# The following packages are considered to be unsafe in a requirements file:
-# pip
-# setuptools
+aiohttp[speedups]==3.7.4.post0
+    # via -r requirements.in
+async-timeout==3.0.1
+    # via aiohttp
+attrs==21.2.0
+    # via aiohttp
+brotlipy==0.7.0
+    # via aiohttp
+cchardet==2.1.7
+    # via aiohttp
+cffi==1.14.6
+    # via
+    #   brotlipy
+    #   pycares
+chardet==4.0.0
+    # via aiohttp
+idna==3.2
+    # via yarl
+multidict==5.1.0
+    # via
+    #   aiohttp
+    #   yarl
+pycares==4.0.0
+    # via aiodns
+pycparser==2.20
+    # via cffi
+typing-extensions==3.10.0.2
+    # via aiohttp
+yarl==1.6.3
+    # via aiohttp

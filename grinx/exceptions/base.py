@@ -1,6 +1,6 @@
 from typing import Optional
 
-from responses.errors import ErrorBaseResponse
+from grinx.responses.errors import ErrorBaseResponse
 
 
 class BaseGrinxException(BaseException):

@@ -1,4 +1,4 @@
-from exceptions.base import BaseGrinxException
+from grinx.exceptions.base import BaseGrinxException
 
 
 class GrinxFileNotFoundException(BaseGrinxException):

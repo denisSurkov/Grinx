@@ -1,6 +1,6 @@
 from typing import Optional
 
-from exceptions.base import BaseGrinxException
+from grinx.exceptions.base import BaseGrinxException
 
 
 class BadGrinxRequest(BaseGrinxException):

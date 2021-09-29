@@ -39,10 +39,8 @@ class RequestParser:
         request_path = self.validate_and_parse_request_uri(request_uri)
 
         callback_to_read_all_headers = self.callback_to_read_all_headers
-        # TODO: ? ca
         callback_to_read_body = self.callback_to_read_all_body
 
-        # TODO: what about headers?
         return BaseRequest.from_header(method, request_path, version)
 
     def validate_method(self, method: str):
@@ -65,13 +63,20 @@ class RequestParser:
     def parse_headers(self, raw_headers: bytes) -> Dict[str, str]:
         decoded_and_splited = raw_headers.decode('utf8').split(' ')
 
-        jar = {}
+        headers = {}
         for line in decoded_and_splited:
             header, value = map(str.strip, line.split(':'))
-            jar[header] = value
+            headers[header] = value
 
-        return jar
+        return headers
 
     def callback_to_read_all_body(self):
+        # If a request contains a message-body and a Content-Length is not given,
+        # the server SHOULD respond with 400 (bad request) if it cannot determine
+        # the length of the message, or with 411 (length required) if it wishes
+        # to insist on receiving a valid Content-Length.
         # TODO: ? how to read all body, I have to know headers?
+        loop = asyncio.get_running_loop()
+        feature = asyncio.run_coroutine_threadsafe(self)
+
         pass

@@ -1,0 +1,2 @@
+aiohttp[speedups]>=3.7
+aiofiles>=0.7.0

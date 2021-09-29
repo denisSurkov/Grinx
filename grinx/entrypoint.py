@@ -3,8 +3,8 @@ import logging
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
 
-from configuration.cli_builder import CommandLineInterfaceBuilder
-from request_processor import RequestProcessor
+from grinx.configuration.cli_builder import CommandLineInterfaceBuilder
+from grinx.request_processor import RequestProcessor
 
 logging.basicConfig(level=logging.DEBUG)
 

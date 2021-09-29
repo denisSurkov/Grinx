@@ -2,6 +2,8 @@ import abc
 import os.path
 from abc import ABC
 
+import aiofiles
+
 from grinx.exceptions.not_found import GrinxFileNotFoundException
 from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
@@ -15,7 +17,7 @@ class BaseFileLocation(BaseLocation, ABC):
 
     async def process_request(self, request_to_process: BaseRequest) -> BaseResponse:
         path_to_file = self.get_full_path_to_file(request_to_process.path)
-        response = self.get_response_for_path_to_file(path_to_file, request_to_process.path)
+        response = await self.get_response_for_path_to_file(path_to_file, request_to_process.path)
         return response
 
     def check_if_appropriate_for_request(self, request: BaseRequest) -> bool:
@@ -25,7 +27,7 @@ class BaseFileLocation(BaseLocation, ABC):
     def get_full_path_to_file(self, request_uri: str) -> str:
         ...
 
-    def get_response_for_path_to_file(self, path_to_file: str, request_path_to_append: str) -> BaseResponse:
+    async def get_response_for_path_to_file(self, path_to_file: str, request_path_to_append: str) -> BaseResponse:
         if not os.path.exists(path_to_file):
             raise GrinxFileNotFoundException(path_to_file)
 
@@ -35,10 +37,8 @@ class BaseFileLocation(BaseLocation, ABC):
             correct_paths = [os.path.join(request_path_to_append, f) for f in files]
             return ListDirectoryResponse.create_with_files_list_as_content(correct_paths)
 
-        # blocking i/o operation. May I use aiofiles?
-        # What encoding should i use?
-        with open(path_to_file, 'r', encoding='utf8') as f:
-            content = f.readlines()
+        async with aiofiles.open(path_to_file, 'r', encoding='utf8') as f:
+            content = await f.readlines()
 
         content_as_bytes = bytes(''.join(content), 'utf8')
         return FileContentResponse.create_with_file_content(content_as_bytes)

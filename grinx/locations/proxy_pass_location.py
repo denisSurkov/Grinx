@@ -1,8 +1,8 @@
 from typing import Awaitable
 
-from locations import BaseLocation
-from requests import BaseRequest
-from responses import BaseResponse
+from grinx.locations import BaseLocation
+from grinx.requests import BaseRequest
+from grinx.responses import BaseResponse
 
 
 class ProxyPassLocation(BaseLocation):

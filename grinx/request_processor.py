@@ -2,11 +2,10 @@ import os
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
 
-from grinx.exceptions.base import BaseGrinxException
 from grinx.requests.base import BaseRequest
 from grinx.requests.request_parser import RequestParser
 from grinx.responses.base import BaseResponse
-from locations.file_location import RootFileLocation
+from grinx.locations.file_location import RootFileLocation
 
 logger = getLogger(__name__)
 

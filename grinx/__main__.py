@@ -1,7 +1,7 @@
 import asyncio
 
-from configuration.cli_builder import CommandLineInterfaceBuilder
-from entrypoint import entrypoint
+from grinx.configuration.cli_builder import CommandLineInterfaceBuilder
+from grinx.entrypoint import entrypoint
 
 if __name__ == '__main__':
     parser = CommandLineInterfaceBuilder().build()
