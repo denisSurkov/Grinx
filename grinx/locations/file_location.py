@@ -47,11 +47,23 @@ class BaseFileLocation(BaseLocation, ABC):
             correct_paths = [os.path.join(request_path_to_append, f) for f in files]
             return ListDirectoryResponse.create_with_files_list_as_content(correct_paths)
 
-        async with aiofiles.open(path_to_file, 'r', encoding='utf8') as f:
+        # TODO: encoding ?
+        guessed_type, encoding = mimetypes.guess_type(path_to_file)
+
+        if 'text' not in guessed_type:
+            mode = 'rb'
+        else:
+            mode = 'r'
+
+        async with aiofiles.open(path_to_file, mode, encoding=encoding) as f:
             content = await f.readlines()
 
-        guessed_type, encoding = mimetypes.guess_type(path_to_file)
-        content_as_bytes = bytes(''.join(content), 'utf8')
+        if mode == 'r':
+            if encoding is None:
+                encoding = 'utf-8'
+            content_as_bytes = bytes(''.join(content), encoding)
+        else:
+            content_as_bytes = b''.join(content)
         return FileContentResponse.create_with_file_content(content_as_bytes, guessed_type, encoding)
 
     @staticmethod

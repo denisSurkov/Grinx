@@ -1,12 +1,22 @@
-from typing import Optional
+import os.path
+from string import Template
 
-from grinx.responses.base import BaseResponse
+from grinx.responses.base import BaseResponse, AbstractWriter
+
+path_to_error_template = os.path.join(os.path.dirname(__file__), '..', 'base_templates', 'error.html')
+with open(path_to_error_template, 'r') as f:
+    content = ''.join(f.readlines())
+
+ERROR_TEMPLATE = Template(content)
 
 
 class ErrorBaseResponse(BaseResponse):
-    ...
+    def write_content(self, writer: AbstractWriter):
+        payload = dict(
+            error_name=self.status_message,
+            error_content=self.content.decode('utf-8'),
+        )
 
+        error_html = ERROR_TEMPLATE.substitute(payload)
 
-class NotFoundResponse(ErrorBaseResponse):
-    def __init__(self, content: Optional[bytes] = None, headers: Optional[bytes] = None):
-        super().__init__(404, 'Not Found', content, headers)
+        writer(error_html.encode('utf-8'))
