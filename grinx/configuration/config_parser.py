@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import json
 
 from grinx.configuration.exceptions import Misconfiguration
@@ -18,9 +18,14 @@ class ConfigParser:
 
     def __init__(self, path_to_config_file: str):
         self.path_to_config_file = path_to_config_file
+        self.host: Optional[str] = None
+        self.port: Optional[str] = None
 
     def configure_servers(self) -> List[BaseServer]:
         configurations = self.load_config_file()
+
+        self.host = configurations.get('Host', 'localhost')
+        self.port = configurations.get('Port', '8000')
 
         servers = configurations.get(self.SERVERS)
         if not servers:
@@ -39,7 +44,7 @@ class ConfigParser:
         locations = list(map(self.configure_location, location_configs))
 
         middleware_configs = server_config.get(self.MIDDLEWARES)
-        if not middleware_configs:
+        if middleware_configs is None:
             raise Misconfiguration('No middleware for server')
         middlewares = list(map(self.configure_middleware, middleware_configs))
 

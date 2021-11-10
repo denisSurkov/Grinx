@@ -23,6 +23,8 @@
 ### Пример конфигурации
 ```
 {
+  "Host": "localhost", # by default
+  "Port": "8000", # by default
   "Servers": [
     {
       "Host": "localhost:8001",

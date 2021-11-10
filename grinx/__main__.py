@@ -18,8 +18,8 @@ async def request_handler(reader: StreamReader, writer: StreamWriter):
     await request_processor()
 
 
-async def entrypoint(args):
-    server = await asyncio.start_server(request_handler, args.host, args.port)
+async def entrypoint(config_parser_):
+    server = await asyncio.start_server(request_handler, config_parser_.host, config_parser_.port)
     logger.debug('Starting server on %s', server.sockets[0].getsockname())
     async with server:
         await server.serve_forever()
@@ -32,4 +32,7 @@ if __name__ == '__main__':
     config_parser = ConfigParser(args.config)
     RequestProcessor.SERVERS = config_parser.configure_servers()
 
-    asyncio.run(entrypoint(args))
+    try:
+        asyncio.run(entrypoint(config_parser))
+    except KeyboardInterrupt:
+        exit()

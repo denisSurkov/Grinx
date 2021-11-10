@@ -64,6 +64,17 @@ class RequestPath:
         path, query, fragment = match.groups()
         return RequestPath(path, query, fragment)
 
+    def __str__(self):
+        base_path = f'{self.path}'
+
+        if self.query:
+            base_path += f'?{self.query}'
+
+        if self.fragment:
+            base_path += f'#{self.fragment}'
+
+        return base_path
+
 
 class BaseRequest:
     def __init__(self, method: str,
@@ -86,6 +97,10 @@ class BaseRequest:
     @property
     def path(self) -> str:
         return self.request_path.path
+
+    @property
+    def full_path(self) -> str:
+        return str(self.request_path)
 
     @property
     def query(self) -> Optional[str]:
