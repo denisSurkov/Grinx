@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from grinx.responses import BaseResponse
 
@@ -34,14 +34,24 @@ class ListDirectoryResponse(BaseResponse):
 
 class FileContentResponse(BaseResponse):
     @staticmethod
-    def create_with_file_content(file_content: bytes) -> 'FileContentResponse':
+    def create_with_file_content(file_content: bytes,
+                                 content_type: Optional[str] = None,
+                                 content_encoding: Optional[str] = None) -> 'FileContentResponse':
+        if not content_type:
+            content_type = 'text/plain'
+
+        headers = dict()
+        headers['Content-Type'] = content_type
+
+        if content_encoding:
+            headers['Content-Encoding'] = content_encoding
+
         return FileContentResponse(
                 status_code=200,
                 status_message='OK',
                 content=file_content,
-                headers={
-                        'Content-Type': 'text/plain',
-                })
+                headers=headers,
+        )
 
 
 __all__ = (

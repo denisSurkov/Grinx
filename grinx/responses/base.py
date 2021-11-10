@@ -5,7 +5,8 @@ AbstractWriter = Callable[[bytes], NoReturn]
 
 class BaseResponse:
     def __init__(self,
-                 status_code: int, status_message: str,
+                 status_code: int,
+                 status_message: str,
                  content: Optional[bytes] = None,
                  headers: Optional[Dict[str, str]] = None,
                  protocol: str = 'HTTP/1.1',

@@ -1,5 +1,6 @@
 import abc
 import logging
+import mimetypes
 import os.path
 from abc import ABC
 
@@ -22,7 +23,9 @@ class BaseFileLocation(BaseLocation, ABC):
         logger.debug(f"processing location {request_to_process.path} with FILE location")
 
         path_to_file = self.get_full_path_to_file(request_to_process.path)
-        self.check_os_path_goes_only_deep(path_to_file)
+
+        if not self.check_os_path_goes_only_deep(path_to_file):
+            raise GrinxFileNotFoundException(path_to_file)
 
         response = await self.get_response_for_path_to_file(path_to_file, request_to_process.path)
         return response
@@ -47,21 +50,17 @@ class BaseFileLocation(BaseLocation, ABC):
         async with aiofiles.open(path_to_file, 'r', encoding='utf8') as f:
             content = await f.readlines()
 
+        guessed_type, encoding = mimetypes.guess_type(path_to_file)
         content_as_bytes = bytes(''.join(content), 'utf8')
-        return FileContentResponse.create_with_file_content(content_as_bytes)
+        return FileContentResponse.create_with_file_content(content_as_bytes, guessed_type, encoding)
 
     @staticmethod
     def get_path_without_leading_slash(path_to_proceed: str) -> str:
         return path_to_proceed[1:]
 
-    @staticmethod
-    def check_os_path_goes_only_deep(path_to_check: str):
-        split_path = path_to_check.split('/')
-        if len(split_path) > 1 and '' in split_path:
-            raise GrinxFileNotFoundException(path_to_check)
-
-        if '..' in split_path:
-            raise GrinxFileNotFoundException(path_to_check)
+    @abc.abstractmethod
+    def check_os_path_goes_only_deep(self, path_to_file: str):
+        ...
 
 
 class RootFileLocation(BaseFileLocation):
@@ -72,6 +71,9 @@ class RootFileLocation(BaseFileLocation):
     def get_full_path_to_file(self, request_uri: str) -> str:
         return os.path.join(self.root, self.get_path_without_leading_slash(request_uri))
 
+    def check_os_path_goes_only_deep(self, path_to_file: str) -> bool:
+        return os.path.commonpath([self.root, path_to_file]) == self.root
+
 
 class AliasFileLocation(BaseFileLocation):
     def __init__(self, path_starts_with: str, alias: str):
@@ -81,6 +83,9 @@ class AliasFileLocation(BaseFileLocation):
     def get_full_path_to_file(self, request_uri: str) -> str:
         removed_location_stars_with = request_uri.split(self.path_starts_with)[1]
         return os.path.join(self.alias, self.get_path_without_leading_slash(removed_location_stars_with))
+
+    def check_os_path_goes_only_deep(self, path_to_file: str):
+        return os.path.commonpath([self.alias, path_to_file]) == self.alias
 
 
 __all__ = (
