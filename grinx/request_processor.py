@@ -2,32 +2,23 @@ import datetime
 import os
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from grinx.exceptions.not_found import GrinxNotFoundException
 from grinx.requests.base import BaseRequest
 from grinx.requests.request_parser import RequestParser
 from grinx.responses.base import BaseResponse
-from grinx.locations.file_location import RootFileLocation
 from grinx.servers.base import BaseServer
-from grinx.middlewares.basic_auth import BasicAuthMiddleware
 
 logger = getLogger(__name__)
 
 
 class RequestProcessor:
+    SERVERS: List[BaseServer] = []
+
     def __init__(self, reader: StreamReader, writer: StreamWriter):
         self.reader = reader
         self.writer = writer
-
-        self.servers = [
-            BaseServer('localhost:8001', [
-                RootFileLocation(path_starts_with='/foo/', root=os.path.join(os.getcwd())),
-                RootFileLocation(path_starts_with='/bar/', root='/'),
-            ], [
-                BasicAuthMiddleware([('222333', '222333222333')])
-            ]),
-        ]
 
         self.log_bag: Dict[str, Any] = dict()
         self.log_bag['peername'] = self.writer.get_extra_info('peername', ('unkown', '0'))
@@ -59,7 +50,7 @@ class RequestProcessor:
 
     async def process_request(self, request: BaseRequest) -> BaseResponse:
         server_to_process: Optional[BaseServer] = None
-        for server in self.servers:
+        for server in self.SERVERS:
             if server.check_if_can_accept_request(request):
                 server_to_process = server
 

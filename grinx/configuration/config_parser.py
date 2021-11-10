@@ -73,4 +73,4 @@ class ConfigParser:
         if not parser:
             raise Misconfiguration(f'No parser for type {middleware_type}')
 
-        return parser(middleware_type)
+        return parser(middleware_config)

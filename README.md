@@ -5,7 +5,7 @@
 
 
 ### Как запустить
-`python3 -m grinx localhost 8001`
+`python3 -m grinx localhost 8001 /path/to/config.json`
 
 
 ## Требования
@@ -16,36 +16,36 @@
 - [x] Автоматическая индексация файлов в каталоге
 - [x] Логирование запросов
 - [x] Виртуальные серверы
-- [ ] Конфигурация через файл конфигураций
+- [x] Конфигурация через файл конфигураций
 - [ ] Proxy pass
 - [ ] Изменение URI с помощью регулярных выражений, path rewrite
 
 ### Пример конфигурации
 ```
 {
-    "Servers": [
+  "Servers": [
+    {
+      "Host": "localhost:8001",
+      "Locations": [
         {
-            "Host": "localhost:8001",
-            "Locations": [
-                {
-                    "Type": "RootFileLocation",
-                    "Path": "/foo/",
-                    "Root": "/home/"
-                }
-            ],
-            "Middlewares": [
-                {
-                    "Type": "BasicAuthMiddleware",
-                    "Users": [
-                        {
-                            "User": "admin",
-                            "Password": "superhardpassword"
-                        }
-                    ]
-                }
-            ]
+          "Type": "RootFileLocation",
+          "Path": "/foo/",
+          "Root": "/Users/denissurkov/University/Python2021autumn/web_server"
         }
-    ]
+      ],
+      "Middlewares": [
+        {
+          "Type": "BasicAuthMiddleware",
+          "Users": [
+            {
+              "User": "admin",
+              "Password": "superhardpassword"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```
 
