@@ -6,7 +6,7 @@ from logging import getLogger
 from grinx.configuration.cli_builder import CommandLineInterfaceBuilder
 from grinx.request_processor import RequestProcessor
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO, format='%(msg)s')
 
 logger = getLogger(__name__)
 

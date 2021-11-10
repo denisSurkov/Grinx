@@ -1,8 +1,8 @@
 import asyncio
 from asyncio import StreamReader
-from typing import Dict
+from typing import Dict, Any
 
-from exceptions.timeout import GrinxTimeoutException
+from grinx.exceptions.timeout import GrinxTimeoutException
 from grinx.exceptions.bad_request import BadGrinxRequest
 from grinx.requests import BaseRequest, RequestPath
 
@@ -12,8 +12,10 @@ ALLOWED_METHOD = frozenset((
 
 
 class RequestParser:
-    def __init__(self, reader: StreamReader):
+    def __init__(self, reader: StreamReader, data_bag: Dict[str, Any]):
         self.reader = reader
+
+        self.data_bag = data_bag
 
     async def __call__(self) -> BaseRequest:
         return await self.parse_request()
@@ -31,6 +33,8 @@ class RequestParser:
 
     async def parse_first_line(self) -> (str, RequestPath, str):
         first_line = (await self.read_lines(1))[0].strip()
+        self.data_bag['first_line'] = first_line
+
         split_first_line = first_line.split(' ')
 
         if len(split_first_line) != 3:
@@ -55,19 +59,18 @@ class RequestParser:
 
     async def parse_headers(self) -> Dict[str, str]:
         raw_header_section = await self.read_until()
-        header_lines = raw_header_section.split('\n')[:-1]
-
+        print(raw_header_section)
+        header_lines = raw_header_section.split('\n')[:-2]
         headers = dict()
         for line in header_lines:
             split_line = line.strip().split(':')
 
             if len(split_line) < 2:
-                print(split_line)
                 raise BadGrinxRequest('wrong headers')
 
-            header, value = split_line[0], ':'.join(split_line[1:])
+            header, value = split_line[0], ':'.join(split_line[1:]).strip()
             headers[header] = value
-
+        print(headers)
         return headers
 
     async def parse_body(self, request: BaseRequest):
@@ -119,7 +122,7 @@ class RequestParser:
 
         return lines
 
-    async def read_until(self, until: bytes = b'\r\n', timeout=3) -> str:
+    async def read_until(self, until: bytes = b'\r\n\r\n', timeout=3) -> str:
         try:
             all_before = await asyncio.wait_for(self.reader.readuntil(until), timeout=timeout)
         except asyncio.TimeoutError:

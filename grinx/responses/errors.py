@@ -14,8 +14,12 @@ class ErrorBaseResponse(BaseResponse):
     def write_content(self, writer: AbstractWriter):
         payload = dict(
             error_name=self.status_message,
-            error_content=self.content.decode('utf-8'),
         )
+
+        if self.content:
+            payload['error_content'] = self.content.decode('utf-8')
+        else:
+            payload['error_content'] = ''
 
         error_html = ERROR_TEMPLATE.substitute(payload)
 

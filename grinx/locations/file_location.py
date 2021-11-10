@@ -6,11 +6,12 @@ from abc import ABC
 
 import aiofiles
 
-from grinx.exceptions.not_found import GrinxFileNotFoundException
+from grinx.exceptions.not_found import GrinxNotFoundException
 from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
 from grinx.responses.files_responses import ListDirectoryResponse, FileContentResponse
+from grinx.locations.registry import register_location
 
 logger = logging.getLogger()
 
@@ -25,7 +26,7 @@ class BaseFileLocation(BaseLocation, ABC):
         path_to_file = self.get_full_path_to_file(request_to_process.path)
 
         if not self.check_os_path_goes_only_deep(path_to_file):
-            raise GrinxFileNotFoundException(path_to_file)
+            raise GrinxNotFoundException(path_to_file)
 
         response = await self.get_response_for_path_to_file(path_to_file, request_to_process.path)
         return response
@@ -39,7 +40,7 @@ class BaseFileLocation(BaseLocation, ABC):
 
     async def get_response_for_path_to_file(self, path_to_file: str, request_path_to_append: str) -> BaseResponse:
         if not os.path.exists(path_to_file):
-            raise GrinxFileNotFoundException(path_to_file)
+            raise GrinxNotFoundException(path_to_file)
 
         if os.path.isdir(path_to_file):
             files = os.listdir(path_to_file)
@@ -47,7 +48,6 @@ class BaseFileLocation(BaseLocation, ABC):
             correct_paths = [os.path.join(request_path_to_append, f) for f in files]
             return ListDirectoryResponse.create_with_files_list_as_content(correct_paths)
 
-        # TODO: encoding ?
         guessed_type, encoding = mimetypes.guess_type(path_to_file)
 
         if 'text' not in guessed_type:
@@ -75,18 +75,23 @@ class BaseFileLocation(BaseLocation, ABC):
         ...
 
 
+@register_location
 class RootFileLocation(BaseFileLocation):
     def __init__(self, path_starts_with: str, root: str):
         super().__init__(path_starts_with)
         self.root = root
 
     def get_full_path_to_file(self, request_uri: str) -> str:
-        return os.path.join(self.root, self.get_path_without_leading_slash(request_uri))
+        return os.path.join(self.root, self.remove_path_starts_with(request_uri))
 
     def check_os_path_goes_only_deep(self, path_to_file: str) -> bool:
         return os.path.commonpath([self.root, path_to_file]) == self.root
 
+    def remove_path_starts_with(self, request_uri: str) -> str:
+        return request_uri.split(self.path_starts_with)[1]
 
+
+@register_location
 class AliasFileLocation(BaseFileLocation):
     def __init__(self, path_starts_with: str, alias: str):
         super().__init__(path_starts_with)

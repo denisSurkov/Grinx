@@ -2,15 +2,15 @@ import datetime
 import os
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
+from typing import Dict, Any, Optional
+
+from grinx.exceptions.not_found import GrinxNotFoundException
 from grinx.requests.base import BaseRequest
 from grinx.requests.request_parser import RequestParser
 from grinx.responses.base import BaseResponse
 from grinx.locations.file_location import RootFileLocation
-
-#
-# 10.185.248.71 - - [09/Jan/2015:19:12:06 +0000] 808840 "GET /inventoryService/inventory/purchaseItem?userId=20253471&itemId=23434300 HTTP/1.1" 500 17 "-" "Apache-HttpClient/4.2.6 (java 1.5)"
-
-
+from grinx.servers.base import BaseServer
+from grinx.middlewares.basic_auth import BasicAuthMiddleware
 
 logger = getLogger(__name__)
 
@@ -20,9 +20,18 @@ class RequestProcessor:
         self.reader = reader
         self.writer = writer
 
-        self._body = b""
-        self._data_read = 0
-        self._read_all_data = False
+        self.servers = [
+            BaseServer('localhost:8001', [
+                RootFileLocation(path_starts_with='/foo/', root=os.path.join(os.getcwd())),
+                RootFileLocation(path_starts_with='/bar/', root='/'),
+            ], [
+                BasicAuthMiddleware([('222333', '222333222333')])
+            ]),
+        ]
+
+        self.log_bag: Dict[str, Any] = dict()
+        self.log_bag['peername'] = self.writer.get_extra_info('peername', ('unkown', '0'))
+        self.log_bag['received_at'] = datetime.datetime.now().strftime('%d/%b/%Y:%H:%M:%S %z')
 
     async def __call__(self):
         await self.process()
@@ -35,28 +44,38 @@ class RequestProcessor:
             logger.debug(f"got problem {e}")
             response: BaseResponse = e.to_response()
 
-        self.write_to_log_about_response(self.writer.get_extra_info('peername'), response)
+        self.log_bag['response_code'] = response.status_code
+        self.log_bag['body_len'] = len(response.content) if response.content else 0
+
+        self.write_to_log_about_response()
         response.flush_to_writer(self.writer.write)
 
         await self.writer.drain()
         self.writer.close()
 
     async def read(self) -> BaseRequest:
-        request_parser = RequestParser(self.reader)
+        request_parser = RequestParser(self.reader, self.log_bag)
         return await request_parser()
 
     async def process_request(self, request: BaseRequest) -> BaseResponse:
-        location = RootFileLocation(path_starts_with='/', root=os.path.join(os.getcwd()))
+        server_to_process: Optional[BaseServer] = None
+        for server in self.servers:
+            if server.check_if_can_accept_request(request):
+                server_to_process = server
 
-        if location.check_if_appropriate_for_request(request):
-            return await location.process_request(request)
-        return BaseResponse(200, 'OK', content=b'not fuck!')
+        if not server_to_process:
+            raise GrinxNotFoundException(request.path)
 
-    @staticmethod
-    def write_to_log_about_response(peername: str, response: BaseResponse):
-        now_date = datetime.datetime.now()
-        str_date = now_date.strftime('%d/%b/%Y:%H:%M:%S %z')
+        return await server_to_process.process_request(request)
 
-        # TODO: get data from request (first line)
-        logger.info(f'{peername} - - [{str_date}]')
+    def write_to_log_about_response(self):
+        peername = self.log_bag.get('peername')
+        client = f'{peername[0]}:{peername[1]}'
+
+        recevied_at = self.log_bag.get('received_at')
+        first_line = self.log_bag.get('first_line')
+        status_code = self.log_bag.get('response_code')
+        body_len = self.log_bag.get('body_len')
+
+        logger.info(f'{client} - - [{recevied_at}] "{first_line}" {status_code} {body_len}')
 
