@@ -11,7 +11,6 @@ from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
 from grinx.responses.files_responses import ListDirectoryResponse, FileContentResponse
-from grinx.locations.registry import register_location
 
 logger = logging.getLogger()
 
@@ -75,7 +74,6 @@ class BaseFileLocation(BaseLocation, ABC):
         ...
 
 
-@register_location
 class RootFileLocation(BaseFileLocation):
     def __init__(self, path_starts_with: str, root: str):
         super().__init__(path_starts_with)
@@ -91,7 +89,6 @@ class RootFileLocation(BaseFileLocation):
         return request_uri.split(self.path_starts_with)[1]
 
 
-@register_location
 class AliasFileLocation(BaseFileLocation):
     def __init__(self, path_starts_with: str, alias: str):
         super().__init__(path_starts_with)

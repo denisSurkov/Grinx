@@ -3,10 +3,8 @@ from typing import Awaitable
 from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
-from grinx.locations.registry import register_location
 
 
-@register_location
 class ProxyPassLocation(BaseLocation):
     def __init__(self, path_starts_with: str, pass_to_address: str):
         self.path_starts_with = path_starts_with

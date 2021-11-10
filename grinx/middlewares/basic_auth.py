@@ -5,10 +5,8 @@ from grinx.exceptions.unauthorized import GrinxUnauthorizedException
 from grinx.middlewares.base import BaseMiddleware
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
-from grinx.middlewares.registry import register_middleware
 
 
-@register_middleware
 class BasicAuthMiddleware(BaseMiddleware):
     DEFAULT_WWW_AUTHNTICATE_STRING = 'Basic realm="User Visible Realm"'
 
@@ -27,7 +25,6 @@ class BasicAuthMiddleware(BaseMiddleware):
 
     async def process_before(self, request: BaseRequest) -> BaseRequest:
         auth = request.headers.get('Authorization')
-        # TODO: fallthrough, if not basic
         if not auth or 'Basic' not in auth:
             raise GrinxUnauthorizedException(self.DEFAULT_WWW_AUTHNTICATE_STRING)
 
