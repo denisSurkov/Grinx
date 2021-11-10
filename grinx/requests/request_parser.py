@@ -52,14 +52,12 @@ class RequestParser:
 
         version = split_first_line[2]
         if version != 'HTTP/1.1':
-            print(version)
             raise BadGrinxRequest('Unsupported version')
 
         return method, request_path, version
 
     async def parse_headers(self) -> Dict[str, str]:
         raw_header_section = await self.read_until()
-        print(raw_header_section)
         header_lines = raw_header_section.split('\n')[:-2]
         headers = dict()
         for line in header_lines:
@@ -70,7 +68,6 @@ class RequestParser:
 
             header, value = split_line[0], ':'.join(split_line[1:]).strip()
             headers[header] = value
-        print(headers)
         return headers
 
     async def parse_body(self, request: BaseRequest):
