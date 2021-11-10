@@ -1,0 +1,16 @@
+{
+  "Port": "8002",
+  "Servers": [
+    {
+      "Host": "localhost:8002",
+      "Locations": [
+        {
+          "Type": "ProxyPassLocation",
+          "Path": "/",
+          "PassTo": "http://localhost:8001"
+        }
+      ],
+      "Middlewares": []
+    }
+  ]
+}

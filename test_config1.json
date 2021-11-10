@@ -1,0 +1,26 @@
+{
+  "Port": "8001",
+  "Servers": [
+    {
+      "Host": "localhost:8001",
+      "Locations": [
+        {
+          "Type": "RootFileLocation",
+          "Path": "/foo/",
+          "Root": "/Users/denissurkov/University/Python2021autumn/web_server"
+        }
+      ],
+      "Middlewares": [
+        {
+          "Type": "BasicAuthMiddleware",
+          "Users": [
+            {
+              "User": "admin",
+              "Password": "superhardpassword"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
