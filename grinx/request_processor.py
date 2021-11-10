@@ -1,7 +1,6 @@
 import os
 from asyncio import StreamReader, StreamWriter
 from logging import getLogger
-
 from grinx.requests.base import BaseRequest
 from grinx.requests.request_parser import RequestParser
 from grinx.responses.base import BaseResponse
@@ -26,7 +25,6 @@ class RequestProcessor:
         try:
             request: BaseRequest = await self.read()
             response: BaseResponse = await self.process_request(request)
-        # why except BaseGrinxException not working?
         except BaseException as e:
             logger.debug(f"got problem {e}")
             response: BaseResponse = e.to_response()

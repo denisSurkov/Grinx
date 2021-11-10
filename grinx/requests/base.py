@@ -68,22 +68,20 @@ class RequestPath:
 class BaseRequest:
     def __init__(self, method: str,
                  request_path: RequestPath,
-                 callback_to_read_all_headers: Callable[[], Dict[str, str]],
-                 callback_to_read_body: Callable[[], bytes],
+                 headers: Dict[str, str],
+                 body: Optional[str] = None,
                  protocol: str = 'HTTP/1.1',):
         self.protocol: str = protocol
         self.method: str = method
         self.request_path = request_path
 
-        self.callback_to_read_all_headers = callback_to_read_all_headers
-        self._headers: Optional[Dict[str, str]] = None
+        self.headers: Optional[Dict[str, str]] = headers
 
-        self.callback_to_read_body = callback_to_read_body
-        self._body: Optional[bytes] = None
+        self.body: Optional[str] = None
 
     @staticmethod
-    def from_header(method: str, request_path: RequestPath, protocol: str) -> 'BaseRequest':
-        return BaseRequest(method, request_path, protocol, None, None)
+    def from_header(method: str, request_path: RequestPath, protocol: str, headers: Dict[str, str]) -> 'BaseRequest':
+        return BaseRequest(method, request_path, headers, None, protocol)
 
     @property
     def path(self) -> str:
@@ -96,25 +94,6 @@ class BaseRequest:
     @property
     def path_fragment(self) -> Optional[str]:
         return self.request_path.fragment
-
-    @property
-    def body(self) -> bytes:
-        if self._body:
-            return self._body
-
-        # we have to read headers before body
-        _ = self.headers
-
-        self._body = self.callback_to_read_body()
-        return self._body
-
-    @property
-    def headers(self) -> Dict[str, str]:
-        if self._headers:
-            return self._headers
-
-        self._headers = self.callback_to_read_all_headers()
-        return self._headers
 
 
 __all__ = (
