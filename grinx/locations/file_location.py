@@ -20,7 +20,10 @@ class BaseFileLocation(BaseLocation, ABC):
 
     async def process_request(self, request_to_process: BaseRequest) -> BaseResponse:
         logger.debug(f"processing location {request_to_process.path} with FILE location")
+
         path_to_file = self.get_full_path_to_file(request_to_process.path)
+        self.check_os_path_goes_only_deep(path_to_file)
+
         response = await self.get_response_for_path_to_file(path_to_file, request_to_process.path)
         return response
 
@@ -50,6 +53,15 @@ class BaseFileLocation(BaseLocation, ABC):
     @staticmethod
     def get_path_without_leading_slash(path_to_proceed: str) -> str:
         return path_to_proceed[1:]
+
+    @staticmethod
+    def check_os_path_goes_only_deep(path_to_check: str):
+        split_path = path_to_check.split('/')
+        if len(split_path) > 1 and '' in split_path:
+            raise GrinxFileNotFoundException(path_to_check)
+
+        if '..' in split_path:
+            raise GrinxFileNotFoundException(path_to_check)
 
 
 class RootFileLocation(BaseFileLocation):
