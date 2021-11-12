@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Tuple
 
 from grinx.configuration.exceptions import Misconfiguration
 from grinx.middlewares.basic_auth import BasicAuthMiddleware
+from grinx.middlewares.path_rewrite import PathRewriteMiddleware
 
 
 def parse_basic_auth(middleware_payload: Dict[str, Any]) -> BasicAuthMiddleware:
@@ -29,7 +30,7 @@ def parse_basic_auth(middleware_payload: Dict[str, Any]) -> BasicAuthMiddleware:
         username = u.get('User')
         password = u.get('Password')
 
-        if not isinstance(u, dict):
+        if not (username or password):
             raise Misconfiguration('Misconfigurated BasicAuthMiddleware')
 
         parsed_users.append((username, password))
@@ -37,6 +38,40 @@ def parse_basic_auth(middleware_payload: Dict[str, Any]) -> BasicAuthMiddleware:
     return BasicAuthMiddleware(parsed_users)
 
 
+def parse_path_rewrite(middleware_payload: Dict[str, Any]) -> PathRewriteMiddleware:
+    """
+    :param middleware_payload: {
+      "Type": "PathRewriteMiddleware",
+      "Rules": [
+        {
+          "From": "/foo/",
+          "To": "/bar/",
+        }
+      ]
+    }
+    """
+    rules = middleware_payload.get('Rules')
+
+    if not rules:
+        raise Misconfiguration('Misconfigurated PathRewriteMiddleware')
+
+    parsed_rules: List[Tuple[str, str]] = []
+    for r in rules:
+        if not isinstance(r, dict):
+            raise Misconfiguration('Misconfigurated PathRewriteMiddleware')
+
+        from_path = r.get('From')
+        to_path = r.get('To')
+
+        if not (from_path or to_path):
+            raise Misconfiguration('Misconfigurated PathRewriteMiddleware')
+
+        parsed_rules.append((from_path, to_path))
+
+    return PathRewriteMiddleware(parsed_rules)
+
+
 MIDDLEWARE_PARSERS = {
     'BasicAuthMiddleware': parse_basic_auth,
+    'PathRewriteMiddleware': parse_path_rewrite,
 }

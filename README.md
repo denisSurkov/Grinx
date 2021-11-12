@@ -44,6 +44,15 @@
               "Password": "superhardpassword"
             }
           ]
+        },
+        {
+          "Type": "PathRewriteMiddleware",
+          "Rules": [
+            {
+              "From": "/foo/",
+              "To": "/bar/",
+            }
+          ]
         }
       ]
     }
@@ -68,6 +77,10 @@
   - Users[]:
     - User: str
     - Password: str
+- PathRewriteMiddleware
+  - Rules:[]:
+    - From: str (regex)
+    - To: str
 
 
 ### Полезные ссылки:
