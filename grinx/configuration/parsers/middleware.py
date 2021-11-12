@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Tuple
 
 from grinx.configuration.exceptions import Misconfiguration
 from grinx.middlewares.basic_auth import BasicAuthMiddleware
-from grinx.middlewares.path_rewrite import PathRewriteMiddleware
+from grinx.middlewares.path_rewrite import PathRewriteMiddleware, PathRewriteInstruction
 
 
 def parse_basic_auth(middleware_payload: Dict[str, Any]) -> BasicAuthMiddleware:
@@ -66,7 +66,7 @@ def parse_path_rewrite(middleware_payload: Dict[str, Any]) -> PathRewriteMiddlew
         if not (from_path or to_path):
             raise Misconfiguration('Misconfigurated PathRewriteMiddleware')
 
-        parsed_rules.append((from_path, to_path))
+        parsed_rules.append(PathRewriteInstruction(from_path, to_path))
 
     return PathRewriteMiddleware(parsed_rules)
 

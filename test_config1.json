@@ -6,7 +6,7 @@
       "Locations": [
         {
           "Type": "RootFileLocation",
-          "Path": "/foo/",
+          "Path": "/bar/",
           "Root": "/Users/denissurkov/University/Python2021autumn/web_server"
         }
       ],
@@ -17,6 +17,15 @@
             {
               "User": "admin",
               "Password": "superhardpassword"
+            }
+          ]
+        },
+        {
+          "Type": "PathRewriteMiddleware",
+          "Rules": [
+            {
+              "From": "/foo/",
+              "To": "/bar/"
             }
           ]
         }

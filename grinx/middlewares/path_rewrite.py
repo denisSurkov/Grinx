@@ -40,8 +40,10 @@ class PathRewriteMiddleware(BaseMiddleware):
 
             matched_groups = from_match.groups()
             result_path = to_
-            for i, match_group in enumerate(matched_groups):
-                result_path = result_path.replace('$1', match_group)
+
+            if '$' in to_:
+                for i, match_group in enumerate(matched_groups):
+                    result_path = result_path.replace('$1', match_group)
                 break
 
         request.request_path = RequestPath.from_relative_path(result_path, raise_if_not_correct=True)
