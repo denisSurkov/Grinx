@@ -17,7 +17,7 @@ logger = logging.getLogger()
 
 
 class BaseFileLocation(BaseLocation, ABC):
-    def __init__(self, path_starts_with: str, file_processor: Callable):
+    def __init__(self, path_starts_with: str):
         self.path_starts_with = path_starts_with
 
     async def process_request(self, request_to_process: BaseRequest) -> BaseResponse:
@@ -50,7 +50,7 @@ class BaseFileLocation(BaseLocation, ABC):
 
         guessed_type, encoding = mimetypes.guess_type(path_to_file)
 
-        if 'text' not in guessed_type:
+        if guessed_type and 'text' not in guessed_type:
             mode = 'rb'
         else:
             mode = 'r'

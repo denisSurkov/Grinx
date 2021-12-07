@@ -56,9 +56,9 @@ class BaseServer:
         return None
 
     async def revert_middlewares(self, applied_middlewares: List[BaseMiddleware],
-                           request: BaseRequest,
-                           response: Optional[BaseResponse],
-                           any_exception: Optional[BaseException] = None) -> BaseResponse:
+                                 request: BaseRequest,
+                                 response: Optional[BaseResponse],
+                                 any_exception: Optional[BaseException] = None) -> BaseResponse:
         for middleware in applied_middlewares[::-1]:
             response = await middleware.process_after(request, response, any_exception)
 
