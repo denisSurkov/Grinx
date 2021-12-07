@@ -23,7 +23,7 @@ class OpenFilesCache:
         if saved_at + timedelta(seconds=self.valid_time_secs) < now_time:
             return await self.cache_file_descriptor(filepath, mode, encoding)
         else:
-            file.seek(0)
+            await file.seek(0)
             return file
 
     async def cache_file_descriptor(self, filepath: str, mode: str, encoding: str) -> IO:

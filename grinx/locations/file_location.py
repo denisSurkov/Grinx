@@ -3,22 +3,24 @@ import logging
 import mimetypes
 import os.path
 from abc import ABC
-from typing import Callable
-
-import aiofiles
+import atexit
+import asyncio
 
 from grinx.exceptions.not_found import GrinxNotFoundException
 from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
 from grinx.responses.files_responses import ListDirectoryResponse, FileContentResponse
+from open_files_cache import OpenFilesCache
 
 logger = logging.getLogger()
+FILE_CACHE = OpenFilesCache()
 
 
 class BaseFileLocation(BaseLocation, ABC):
-    def __init__(self, path_starts_with: str):
+    def __init__(self, path_starts_with: str, file_cache=FILE_CACHE):
         self.path_starts_with = path_starts_with
+        self.file_cache = file_cache
 
     async def process_request(self, request_to_process: BaseRequest) -> BaseResponse:
         logger.debug(f"processing location {request_to_process.path} with FILE location")
@@ -55,8 +57,9 @@ class BaseFileLocation(BaseLocation, ABC):
         else:
             mode = 'r'
 
-        async with aiofiles.open(path_to_file, mode, encoding=encoding) as f:
-            content = await f.readlines()
+        f = await self.file_cache.open(path_to_file, mode, encoding)
+
+        content = await f.readlines()
 
         if mode == 'r':
             if encoding is None:
