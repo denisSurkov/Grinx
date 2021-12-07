@@ -5,14 +5,14 @@
 
 
 ### Как запустить
-`python3 -m grinx localhost 8001 /path/to/config.json`
+`python3 -m grinx /path/to/config.json`
 
 
 ## Требования
 - [x] Асинхронная/многопоточная/etc реализация
 - [x] «Ручной» разбор HTTP-запросов
 - [ ] Поддержка keep-alive
-- [ ] Обслуживание статических запросов + кэш дескрипторов открытых файлов (https://nginx.org/ru/docs/http/ngx_http_core_module.html#open_file_cache)s
+- [ ] Обслуживание статических запросов + кэш дескрипторов открытых файлов (https://nginx.org/ru/docs/http/ngx_http_core_module.html#open_file_cache)
 - [x] Автоматическая индексация файлов в каталоге
 - [x] Логирование запросов
 - [x] Виртуальные серверы

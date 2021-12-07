@@ -3,6 +3,7 @@ import logging
 import mimetypes
 import os.path
 from abc import ABC
+from typing import Callable
 
 import aiofiles
 
@@ -16,7 +17,7 @@ logger = logging.getLogger()
 
 
 class BaseFileLocation(BaseLocation, ABC):
-    def __init__(self, path_starts_with: str):
+    def __init__(self, path_starts_with: str, file_processor: Callable):
         self.path_starts_with = path_starts_with
 
     async def process_request(self, request_to_process: BaseRequest) -> BaseResponse:

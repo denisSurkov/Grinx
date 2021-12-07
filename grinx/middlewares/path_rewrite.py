@@ -6,7 +6,6 @@ from middlewares.base import BaseMiddleware
 from requests import BaseRequest, RequestPath
 from responses import BaseResponse
 
-
 PathRewriteInstruction = namedtuple('PathRewriteInstruction', ['from_path', 'to_path'])
 
 

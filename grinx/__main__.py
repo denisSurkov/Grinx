@@ -6,6 +6,7 @@ from logging import getLogger
 from grinx.configuration.config_parser import ConfigParser
 from grinx.configuration.cli_builder import CommandLineInterfaceBuilder
 from grinx.request_processor import RequestProcessor
+from open_files_cache import OpenFilesCache
 
 logging.basicConfig(level=logging.INFO, format='%(msg)s')
 
@@ -29,6 +30,7 @@ if __name__ == '__main__':
     parser = CommandLineInterfaceBuilder().build()
     args = parser.parse_args()
 
+    cache = OpenFilesCache()
     config_parser = ConfigParser(args.config)
     RequestProcessor.SERVERS = config_parser.configure_servers()
 
