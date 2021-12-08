@@ -3,15 +3,13 @@ import logging
 import mimetypes
 import os.path
 from abc import ABC
-import atexit
-import asyncio
 
 from grinx.exceptions.not_found import GrinxNotFoundException
 from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
 from grinx.responses.files_responses import ListDirectoryResponse, FileContentResponse
-from open_files_cache import OpenFilesCache
+from grinx.open_files_cache import OpenFilesCache
 
 logger = logging.getLogger()
 FILE_CACHE = OpenFilesCache()

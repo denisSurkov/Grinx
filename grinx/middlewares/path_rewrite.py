@@ -2,9 +2,9 @@ from collections import namedtuple
 from typing import Optional, List, Tuple
 import re
 
-from middlewares.base import BaseMiddleware
-from requests import BaseRequest, RequestPath
-from responses import BaseResponse
+from grinx.middlewares.base import BaseMiddleware
+from grinx.requests import BaseRequest, RequestPath
+from grinx.responses import BaseResponse
 
 PathRewriteInstruction = namedtuple('PathRewriteInstruction', ['from_path', 'to_path'])
 

@@ -6,7 +6,7 @@ from logging import getLogger
 from grinx.configuration.config_parser import ConfigParser
 from grinx.configuration.cli_builder import CommandLineInterfaceBuilder
 from grinx.request_processor import RequestProcessor
-from open_files_cache import OpenFilesCache
+from grinx.open_files_cache import OpenFilesCache
 
 logging.basicConfig(level=logging.INFO, format='%(msg)s')
 

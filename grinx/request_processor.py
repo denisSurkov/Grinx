@@ -3,7 +3,6 @@ from asyncio import StreamReader, StreamWriter
 from logging import getLogger
 from typing import Dict, Any, Optional, List
 
-from exceptions.timeout import GrinxTimeoutException
 from grinx.exceptions.not_found import GrinxNotFoundException
 from grinx.requests.base import BaseRequest
 from grinx.requests.request_parser import RequestParser

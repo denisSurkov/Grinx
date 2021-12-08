@@ -1,6 +1,6 @@
 import aiohttp
 
-from exceptions.bad_request import BadGrinxRequest
+from grinx.exceptions.bad_request import BadGrinxRequest
 from grinx.locations.base import BaseLocation
 from grinx.requests import BaseRequest
 from grinx.responses import BaseResponse
