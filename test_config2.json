@@ -7,7 +7,7 @@
         {
           "Type": "ProxyPassLocation",
           "Path": "/",
-          "PassTo": "http://localhost:8001"
+          "PassTo": "http://cs.usu.edu.ru"
         }
       ],
       "Middlewares": []

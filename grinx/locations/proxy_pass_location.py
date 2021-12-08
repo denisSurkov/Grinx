@@ -21,18 +21,24 @@ class ProxyPassLocation(BaseLocation):
                                                  self.get_rewritten_url(request_to_process),
                                                  headers=headers_copy,
                                                  data=request_to_process.body)
+                converted_response = await self.convert_from_aiohttp_response_to_grinx_response(response)
+                return converted_response
         except BaseException as e:
             raise BadGrinxRequest(str(e))
-
-        converted_response = await self.convert_from_aiohttp_response_to_grinx_response(response)
-        return converted_response
 
     def check_if_appropriate_for_request(self, request: BaseRequest) -> bool:
         return request.path.startswith(self.path_starts_with)
 
     async def convert_from_aiohttp_response_to_grinx_response(self, response: aiohttp.ClientResponse) -> BaseResponse:
         content, _ = await response.content.readchunk()
-        return BaseResponse(response.status, response.reason, content, response.headers)
+
+        correct_headers = dict()
+        for h in response.headers:
+            if h == 'Connection' or h == 'Transfer-Encoding' or h == 'Content-Encoding':
+                continue
+            correct_headers[h] = response.headers[h]
+
+        return BaseResponse(response.status, response.reason, content, correct_headers)
 
     def get_rewritten_url(self, request: BaseRequest) -> str:
         return f'{self.pass_to_address}{request.full_path}'

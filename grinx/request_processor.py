@@ -31,29 +31,26 @@ class RequestProcessor:
         should_just_close = False
         count_response = 0
 
-        while client_asks_for_keep_alive:
-            try:
-                request: BaseRequest = await self.read()
-                response: BaseResponse = await self.process_request(request)
-                client_asks_for_keep_alive = request.headers.get('Connection', '').strip() == 'keep-alive'
-            except BaseException as e:
-                if count_response > 0:
-                    client_asks_for_keep_alive = False
-                    should_just_close = True
+        try:
+            request: BaseRequest = await self.read()
+            response: BaseResponse = await self.process_request(request)
+            client_asks_for_keep_alive = request.headers.get('Connection', '').strip() == 'keep-alive'
+        except BaseException as e:
+            if count_response > 0:
+                client_asks_for_keep_alive = False
+                should_just_close = True
 
-                logger.debug(f"got problem {e}")
-                response: BaseResponse = e.to_response()
+            logger.debug(f"got problem {e}")
+            response: BaseResponse = e.to_response()
 
-            self.log_bag['response_code'] = response.status_code
-            self.log_bag['body_len'] = len(response.content) if response.content else 0
+        self.log_bag['response_code'] = response.status_code
+        self.log_bag['body_len'] = len(response.content) if response.content else 0
+        if not should_just_close:
+            self.write_to_log_about_response()
+            response.flush_to_writer(self.writer.write)
 
-            if not should_just_close:
-                self.write_to_log_about_response()
-                response.flush_to_writer(self.writer.write)
-
-            count_response += 1
-            if not should_just_close:
-                await self.writer.drain()
+        count_response += 1
+        await self.writer.drain()
 
         self.writer.close()
 
